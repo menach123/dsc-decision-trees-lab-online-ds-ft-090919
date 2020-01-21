@@ -39,7 +39,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, roc_curve, auc
 from sklearn.tree import export_graphviz
 from IPython.display import Image  
-from pydotplus import graph_from_dot_data
+import pydotplus
 ```
 
 ## Step 2: Import data
@@ -53,35 +53,143 @@ Now, you'll load our dataset in a DataFrame, perform some basic EDA, and get a g
 
 
 ```python
-# Create Dataframe
-
-## Your code here 
-
+# Create Dataframe
+dataset = pd.read_csv('data_banknote_authentication.csv', header=None) 
+dataset.columns = ['Variance', 'Skewness', 'Curtosis', 'Entropy', 'Class']
 ```
 
 
 ```python
 # Describe the dataset
-
-## Your code here 
-
+dataset.describe()
 ```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Variance</th>
+      <th>Skewness</th>
+      <th>Curtosis</th>
+      <th>Entropy</th>
+      <th>Class</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>1372.000000</td>
+      <td>1372.000000</td>
+      <td>1372.000000</td>
+      <td>1372.000000</td>
+      <td>1372.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>0.433735</td>
+      <td>1.922353</td>
+      <td>1.397627</td>
+      <td>-1.191657</td>
+      <td>0.444606</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>2.842763</td>
+      <td>5.869047</td>
+      <td>4.310030</td>
+      <td>2.101013</td>
+      <td>0.497103</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>-7.042100</td>
+      <td>-13.773100</td>
+      <td>-5.286100</td>
+      <td>-8.548200</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>-1.773000</td>
+      <td>-1.708200</td>
+      <td>-1.574975</td>
+      <td>-2.413450</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>0.496180</td>
+      <td>2.319650</td>
+      <td>0.616630</td>
+      <td>-0.586650</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>2.821475</td>
+      <td>6.814625</td>
+      <td>3.179250</td>
+      <td>0.394810</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>6.824800</td>
+      <td>12.951600</td>
+      <td>17.927400</td>
+      <td>2.449500</td>
+      <td>1.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
 
 
 ```python
 # Shape of dataset
-
-## Your code here 
-
+dataset.shape
 ```
+
+
+
+
+    (1372, 5)
+
+
 
 
 ```python
-# Class frequency of target variable 
-
-## Your code here 
-
+# Class frequency of target variable 
+dataset['Class'].value_counts()
 ```
+
+
+
+
+    0    762
+    1    610
+    Name: Class, dtype: int64
+
+
 
 ## Step 3: Create features, labels, training, and test data
 
@@ -91,18 +199,15 @@ Now we need to create our feature set `X` and labels `y`:
 
 
 ```python
-# Create features and labels
-
-## Your code here 
-
+# Create features and labels
+X = dataset.drop('Class', axis=1)  
+y = dataset['Class']  
 ```
 
 
 ```python
 # Perform an 80/20 split
-
-## Your code here 
-
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=10)  
 ```
 
 ## Step 4: Train the classifier and make predictions
@@ -113,17 +218,26 @@ Now we need to create our feature set `X` and labels `y`:
 
 ```python
 # Train a DT classifier
-
-## Your code here
-
+classifier = DecisionTreeClassifier(random_state=10)  
+classifier.fit(X_train, y_train)  
 ```
+
+
+
+
+    DecisionTreeClassifier(class_weight=None, criterion='gini', max_depth=None,
+                max_features=None, max_leaf_nodes=None,
+                min_impurity_decrease=0.0, min_impurity_split=None,
+                min_samples_leaf=1, min_samples_split=2,
+                min_weight_fraction_leaf=0.0, presort=False, random_state=10,
+                splitter='best')
+
+
 
 
 ```python
 # Make predictions for test data
-
-## Your code here 
-
+y_pred = classifier.predict(X_test)  
 ```
 
 ## Step 5: Check predictive performance
@@ -135,12 +249,12 @@ Use different evaluation measures to check the predictive performance of the cla
 
 ```python
 # Calculate accuracy 
-acc = None
+acc = accuracy_score(y_test, y_pred)
 print('Accuracy is :{0}'.format(acc))
 
 # Check the AUC for predictions
-false_positive_rate, true_positive_rate, thresholds = None
-roc_auc = None
+false_positive_rate, true_positive_rate, thresholds = roc_curve(y_test, y_pred)
+roc_auc = auc(false_positive_rate, true_positive_rate)
 print('\nAUC is :{0}'.format(round(roc_auc, 2)))
 
 # Create and print a confusion matrix 
@@ -148,6 +262,14 @@ print('\nConfusion Matrix')
 print('----------------')
 
 ```
+
+    Accuracy is :0.9781818181818182
+    
+    AUC is :0.98
+    
+    Confusion Matrix
+    ----------------
+    
 
 ## Level up (Optional)
 
@@ -163,7 +285,11 @@ The default impurity criterion in scikit-learn is the Gini impurity. We can chan
 
 ```python
 # Instantiate and fit a DecisionTreeClassifier
-classifier_2 = None
+classifier_2 = DecisionTreeClassifier(criterion='entropy', random_state=10)  
+classifier_2.fit(X_train, y_train) 
+
+# Make predictions for test data
+y_pred = classifier.predict(X_test)  
 
 ```
 
@@ -176,11 +302,36 @@ dot_data = export_graphviz(classifier_2, out_file=None,
                            filled=True, rounded=True, special_characters=True)
 
 # Draw graph
-graph = graph_from_dot_data(dot_data)  
+graph = pydotplus.graph_from_dot_data(dot_data)  
+
 
 # Show graph
-Image(graph.create_png())
+
 ```
+
+
+```python
+# Calculate accuracy 
+acc = accuracy_score(y_test, y_pred)
+print('Accuracy is :{0}'.format(acc))
+
+# Check the AUC for predictions
+false_positive_rate, true_positive_rate, thresholds = roc_curve(y_test, y_pred)
+roc_auc = auc(false_positive_rate, true_positive_rate)
+print('\nAUC is :{0}'.format(round(roc_auc, 2)))
+
+# Create and print a confusion matrix 
+print('\nConfusion Matrix')
+print('----------------')
+```
+
+    Accuracy is :0.9781818181818182
+    
+    AUC is :0.98
+    
+    Confusion Matrix
+    ----------------
+    
 
 - We discussed earlier that decision trees are very sensitive to outliers. Try to identify and remove/fix any possible outliers in the dataset  
 - Check the distributions of the data. Is there any room for normalization/scaling of data? Apply these techniques and see if it improves upon accuracy score 
